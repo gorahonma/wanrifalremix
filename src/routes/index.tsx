@@ -307,10 +307,15 @@ function Index() {
   const [uploadMsg, setUploadMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const uploadSongFn = useServerFn(uploadSong);
   const deleteSongFn = useServerFn(deleteSong);
+  const renameSongFn = useServerFn(renameSong);
   const listSongsFn = useServerFn(listSongs);
 
-  // Delete state
+  // Action menu state
+  const [actionMenu, setActionMenu] = useState<Track | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Track | null>(null);
+  const [renameTarget, setRenameTarget] = useState<Track | null>(null);
+  const [renameInput, setRenameInput] = useState("");
+  const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFiredRef = useRef(false);
@@ -321,7 +326,7 @@ function Index() {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
     longPressTimer.current = setTimeout(() => {
       longPressFiredRef.current = true;
-      setDeleteTarget(t);
+      setActionMenu(t);
     }, 550);
   };
   const cancelLongPress = () => {
@@ -335,6 +340,39 @@ function Index() {
     const prefix = "https://cdn.jsdelivr.net/gh/wanrifalgg/song@main/";
     if (!url.startsWith(prefix)) return null;
     try { return decodeURIComponent(url.slice(prefix.length)); } catch { return null; }
+  };
+
+  const openRename = (t: Track) => {
+    setActionMenu(null);
+    setRenameInput(t.title);
+    setRenameTarget(t);
+  };
+  const openDelete = (t: Track) => {
+    setActionMenu(null);
+    setDeleteTarget(t);
+  };
+
+  const confirmRename = async () => {
+    if (!renameTarget || !isAdmin || !adminPassword) return;
+    const oldFilename = filenameFromUrl(renameTarget.url);
+    if (!oldFilename) { toast.error("Lagu ini tidak bisa diganti namanya"); return; }
+    const newName = renameInput.trim();
+    if (!newName) { toast.error("Nama baru tidak boleh kosong"); return; }
+    if (!/^[a-zA-Z0-9 ._-]+$/.test(newName)) {
+      toast.error("Nama hanya boleh huruf/angka/spasi/._-");
+      return;
+    }
+    setRenaming(true);
+    try {
+      const res = await renameSongFn({ data: { oldFilename, newName, adminPassword } });
+      toast.success(`Diubah menjadi "${res.title}"`);
+      setTracks((prev) => prev.map((x) => x.url === renameTarget.url ? { ...x, title: res.title, url: res.url } : x));
+      setRenameTarget(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gagal mengubah nama lagu");
+    } finally {
+      setRenaming(false);
+    }
   };
 
   const confirmDelete = async () => {
@@ -357,6 +395,7 @@ function Index() {
       setDeleting(false);
     }
   };
+
 
 
   // Admin state — login dengan klik logo aplikasi
