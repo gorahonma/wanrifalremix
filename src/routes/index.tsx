@@ -1177,12 +1177,55 @@ function Index() {
 
           {/* Controls */}
           <div className="mt-5 flex items-center justify-between">
-            <button
-              onClick={() => setShuffle(!shuffle)}
-              className={`p-2 transition ${shuffle ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              <Shuffle size={20} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShuffle(!shuffle)}
+                className={`p-2 transition ${shuffle ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Shuffle size={20} />
+              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowSpeedMenu((v) => !v)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition ${
+                    speed !== 1
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Kecepatan pemutaran"
+                  aria-label="Kecepatan pemutaran"
+                >
+                  <Gauge size={18} />
+                  <span className="text-[10px] leading-none">{speed}x</span>
+                </button>
+                {showSpeedMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowSpeedMenu(false)}
+                    />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 bg-popover border border-border rounded-xl shadow-lg p-1.5 flex flex-col min-w-[88px]">
+                      {SPEED_OPTIONS.map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => {
+                            setSpeed(s);
+                            setShowSpeedMenu(false);
+                          }}
+                          className={`px-3 py-1.5 rounded-md text-xs font-medium transition text-center ${
+                            speed === s
+                              ? "bg-primary text-primary-foreground"
+                              : "text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {s}x
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
             <div className="flex items-center gap-4">
               <button onClick={prev} className="text-foreground hover:scale-110 transition">
                 <SkipBack size={26} fill="currentColor" />
