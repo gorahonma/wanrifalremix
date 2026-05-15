@@ -22,9 +22,10 @@ import {
   Lock,
   ShieldCheck,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { uploadSong, deleteSong } from "@/lib/songs.functions";
+import { uploadSong, deleteSong, renameSong } from "@/lib/songs.functions";
 import { listSongs } from "@/lib/songs-list.functions";
 import { toast } from "sonner";
 
@@ -306,10 +307,15 @@ function Index() {
   const [uploadMsg, setUploadMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const uploadSongFn = useServerFn(uploadSong);
   const deleteSongFn = useServerFn(deleteSong);
+  const renameSongFn = useServerFn(renameSong);
   const listSongsFn = useServerFn(listSongs);
 
-  // Delete state
+  // Action menu state
+  const [actionMenu, setActionMenu] = useState<Track | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Track | null>(null);
+  const [renameTarget, setRenameTarget] = useState<Track | null>(null);
+  const [renameInput, setRenameInput] = useState("");
+  const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFiredRef = useRef(false);
@@ -320,7 +326,7 @@ function Index() {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
     longPressTimer.current = setTimeout(() => {
       longPressFiredRef.current = true;
-      setDeleteTarget(t);
+      setActionMenu(t);
     }, 550);
   };
   const cancelLongPress = () => {
@@ -334,6 +340,39 @@ function Index() {
     const prefix = "https://cdn.jsdelivr.net/gh/wanrifalgg/song@main/";
     if (!url.startsWith(prefix)) return null;
     try { return decodeURIComponent(url.slice(prefix.length)); } catch { return null; }
+  };
+
+  const openRename = (t: Track) => {
+    setActionMenu(null);
+    setRenameInput(t.title);
+    setRenameTarget(t);
+  };
+  const openDelete = (t: Track) => {
+    setActionMenu(null);
+    setDeleteTarget(t);
+  };
+
+  const confirmRename = async () => {
+    if (!renameTarget || !isAdmin || !adminPassword) return;
+    const oldFilename = filenameFromUrl(renameTarget.url);
+    if (!oldFilename) { toast.error("Lagu ini tidak bisa diganti namanya"); return; }
+    const newName = renameInput.trim();
+    if (!newName) { toast.error("Nama baru tidak boleh kosong"); return; }
+    if (!/^[a-zA-Z0-9 ._-]+$/.test(newName)) {
+      toast.error("Nama hanya boleh huruf/angka/spasi/._-");
+      return;
+    }
+    setRenaming(true);
+    try {
+      const res = await renameSongFn({ data: { oldFilename, newName, adminPassword } });
+      toast.success(`Diubah menjadi "${res.title}"`);
+      setTracks((prev) => prev.map((x) => x.url === renameTarget.url ? { ...x, title: res.title, url: res.url } : x));
+      setRenameTarget(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gagal mengubah nama lagu");
+    } finally {
+      setRenaming(false);
+    }
   };
 
   const confirmDelete = async () => {
@@ -356,6 +395,7 @@ function Index() {
       setDeleting(false);
     }
   };
+
 
 
   // Admin state — login dengan klik logo aplikasi
@@ -1213,7 +1253,7 @@ function Index() {
                     onContextMenu={(e) => {
                       if (!isAdmin) return;
                       e.preventDefault();
-                      setDeleteTarget(t);
+                      setActionMenu(t);
                     }}
                     onPointerDown={() => startLongPress(t)}
                     onPointerUp={cancelLongPress}
@@ -1432,6 +1472,77 @@ function Index() {
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-60 transition"
               >
                 {adminBusy ? <><Loader2 size={16} className="animate-spin" /> Memproses...</> : <><ShieldCheck size={16} /> Masuk sebagai Admin</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {actionMenu && (
+        <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={() => setActionMenu(null)} />
+          <div className="relative w-full max-w-xs rounded-2xl border border-primary/30 bg-background shadow-2xl p-2">
+            <div className="px-3 pt-2 pb-3 border-b border-border">
+              <p className="text-xs text-muted-foreground">Aksi admin</p>
+              <p className="text-sm font-bold truncate">{actionMenu.title}</p>
+            </div>
+            <button
+              onClick={() => openRename(actionMenu)}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm hover:bg-primary/10 transition text-left"
+            >
+              <Pencil size={16} className="text-primary" />
+              Ganti nama
+            </button>
+            <button
+              onClick={() => openDelete(actionMenu)}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm hover:bg-destructive/10 transition text-left text-destructive"
+            >
+              <Trash2 size={16} />
+              Hapus
+            </button>
+          </div>
+        </div>
+      )}
+
+      {renameTarget && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={() => !renaming && setRenameTarget(null)} />
+          <div className="relative w-full max-w-sm rounded-2xl border border-primary/40 bg-background shadow-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold flex items-center gap-2 text-primary">
+                <Pencil size={18} /> Ganti Nama Lagu
+              </h2>
+              <button onClick={() => !renaming && setRenameTarget(null)} className="p-1 rounded-full hover:bg-muted transition" aria-label="Tutup">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Nama file di GitHub akan ikut berubah menjadi <span className="font-mono">{(renameInput.trim() || "...")}.mp3</span>
+            </p>
+            <input
+              type="text"
+              value={renameInput}
+              onChange={(e) => setRenameInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !renaming) confirmRename(); }}
+              disabled={renaming}
+              autoFocus
+              placeholder="Nama baru (tanpa .mp3)"
+              className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm mb-4"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => !renaming && setRenameTarget(null)}
+                disabled={renaming}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border hover:bg-muted text-sm font-semibold transition disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmRename}
+                disabled={renaming}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-60 transition"
+              >
+                {renaming ? <><Loader2 size={16} className="animate-spin" /> Mengubah...</> : <><Pencil size={16} /> Simpan</>}
               </button>
             </div>
           </div>
