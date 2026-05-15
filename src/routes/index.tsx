@@ -1205,10 +1205,20 @@ function Index() {
                   <li
                     key={t.url}
                     onClick={() => {
+                      if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
                       setIdx(i);
                       setPlaying(true);
                     }}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition ${
+                    onContextMenu={(e) => {
+                      if (!isAdmin) return;
+                      e.preventDefault();
+                      setDeleteTarget(t);
+                    }}
+                    onPointerDown={() => startLongPress(t)}
+                    onPointerUp={cancelLongPress}
+                    onPointerLeave={cancelLongPress}
+                    onPointerCancel={cancelLongPress}
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition select-none ${
                       active
                         ? "border border-primary/50 bg-primary/5"
                         : "border border-transparent hover:bg-[var(--surface-2)]/50"
