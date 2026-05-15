@@ -1,31 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Shuffle,
-  Repeat,
-  Music2,
-  Sparkles,
-  Download,
-  Search,
-  Palette,
-  Moon,
-  Menu,
-  Upload,
-  RefreshCw,
-  Loader2,
-  X,
-  LogOut,
-  Lock,
-  ShieldCheck,
-  Trash2,
-  Pencil,
-  Gauge,
-  ArrowDownUp,
-} from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Music2, Sparkles, Download, Search, Palette, Moon, Menu, Upload, RefreshCw, Loader as Loader2, X, LogOut, Lock, ShieldCheck, Trash2, Pencil, Gauge, ArrowDownUp } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { uploadSong, deleteSong, renameSong } from "@/lib/songs.functions";
 import { listSongs } from "@/lib/songs-list.functions";
@@ -292,6 +267,7 @@ function Index() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [quote, setQuote] = useState(QUOTES_LUCU[0]);
   const [quoteCat, setQuoteCat] = useState<string>("lucu");
+  const [quoteTimerKey, setQuoteTimerKey] = useState(0);
   const [showQuoteMenu, setShowQuoteMenu] = useState(false);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [tracksLoading, setTracksLoading] = useState(true);
@@ -534,10 +510,10 @@ function Index() {
   useEffect(() => {
     const list = QUOTE_CATEGORIES.find((c) => c.key === quoteCat)?.list ?? QUOTES_LUCU;
     const pick = () => setQuote(list[Math.floor(Math.random() * list.length)]);
-    pick();
+    if (quoteTimerKey > 0) pick();
     const id = setInterval(pick, 10000);
     return () => clearInterval(id);
-  }, [quoteCat]);
+  }, [quoteCat, quoteTimerKey]);
 
   const sortTracksBy = (arr: Track[], by: SortBy): Track[] => {
     const copy = [...arr];
@@ -1154,6 +1130,7 @@ function Index() {
                   tries++;
                 }
                 setQuote(next);
+                setQuoteTimerKey((k) => k + 1);
               }}
               className="absolute bottom-2 right-2 p-2 rounded-lg hover:bg-primary/10 text-foreground/80"
             >
