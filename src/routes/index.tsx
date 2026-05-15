@@ -539,9 +539,24 @@ function Index() {
     return () => clearInterval(id);
   }, [quoteCat]);
 
+  const sortTracksBy = (arr: Track[], by: SortBy): Track[] => {
+    const copy = [...arr];
+    if (by === "newest") {
+      copy.sort((a, b) => {
+        const ad = a.addedAt ? Date.parse(a.addedAt) : 0;
+        const bd = b.addedAt ? Date.parse(b.addedAt) : 0;
+        return bd - ad;
+      });
+    } else {
+      copy.sort((a, b) =>
+        a.title.localeCompare(b.title, "id", { sensitivity: "base" })
+      );
+    }
+    return copy;
+  };
+
   const loadTracksFromServer = async (): Promise<{ ok: boolean; count: number; tracks: Track[] }> => {
-    const sortTracks = (arr: Track[]) =>
-      arr.sort((a, b) => a.title.localeCompare(b.title, "id", { sensitivity: "base" }));
+    const sortTracks = (arr: Track[]) => sortTracksBy(arr, sortBy);
 
     // 1) Server function (pakai GITHUB_TOKEN, limit 5000/jam)
     try {
