@@ -7,6 +7,8 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 
@@ -72,14 +74,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Wanrifal Remix" },
+      { name: "description", content: "Wanrifal Remix App is a web application built from a GitHub repository." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Wanrifal Remix" },
+      { property: "og:description", content: "Wanrifal Remix App is a web application built from a GitHub repository." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Wanrifal Remix" },
+      { name: "twitter:description", content: "Wanrifal Remix App is a web application built from a GitHub repository." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e33510d5-ef8b-43d1-89c4-85c56bc84ad1/id-preview-c19823a3--104d374c-921a-46c9-8457-66fff4681523.lovable.app-1778467355790.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e33510d5-ef8b-43d1-89c4-85c56bc84ad1/id-preview-c19823a3--104d374c-921a-46c9-8457-66fff4681523.lovable.app-1778467355790.png" },
     ],
     links: [
       {
@@ -110,10 +116,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      {mounted && <Toaster richColors position="top-center" />}
     </QueryClientProvider>
   );
 }
