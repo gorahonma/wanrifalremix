@@ -610,6 +610,23 @@ function Index() {
     else a.pause();
   }, [playing, idx]);
 
+  // Apply playback speed (pitch & tempo synced — pitch follows speed)
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.playbackRate = speed;
+    // Disable pitch preservation so pitch shifts with tempo
+    type PitchAudio = HTMLAudioElement & {
+      preservesPitch?: boolean;
+      mozPreservesPitch?: boolean;
+      webkitPreservesPitch?: boolean;
+    };
+    const pa = a as PitchAudio;
+    pa.preservesPitch = false;
+    pa.mozPreservesPitch = false;
+    pa.webkitPreservesPitch = false;
+  }, [speed, idx]);
+
   // Sleep timer: tick + auto-pause
   useEffect(() => {
     if (!sleepEndsAt) { setSleepRemaining(0); return; }
