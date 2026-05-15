@@ -1211,6 +1211,27 @@ function Index() {
             </button>
           </div>
 
+          {/* Playback speed (pitch + tempo synced) */}
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span className="text-xs text-muted-foreground">Kecepatan</span>
+            <div className="flex items-center gap-1 flex-wrap justify-center">
+              {SPEED_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSpeed(s)}
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition border ${
+                    speed === s
+                      ? "bg-primary text-primary-foreground border-transparent"
+                      : "bg-muted/40 text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                  title={`Putar pada ${s}x (pitch & tempo)`}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Playlist */}
           <div className="mt-7">
             <div className="flex items-center justify-end mb-2">
