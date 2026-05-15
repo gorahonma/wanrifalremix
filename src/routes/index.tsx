@@ -1326,60 +1326,50 @@ function Index() {
         </div>
       )}
 
-      {showAuth && (
+      {showAdmin && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="absolute inset-0" onClick={() => !authBusy && setShowAuth(false)} />
+          <div className="absolute inset-0" onClick={() => !adminBusy && setShowAdmin(false)} />
           <div className="relative w-full max-w-sm rounded-2xl border border-primary/30 bg-background shadow-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold flex items-center gap-2">
-                <UserIcon size={18} className="text-primary" />
-                {authMode === "login" ? "Login" : "Daftar Akun"}
+                <ShieldCheck size={18} className="text-primary" />
+                Login Admin
               </h2>
-              <button onClick={() => !authBusy && setShowAuth(false)} className="p-1 rounded-full hover:bg-muted transition" aria-label="Tutup">
+              <button onClick={() => !adminBusy && setShowAdmin(false)} className="p-1 rounded-full hover:bg-muted transition" aria-label="Tutup">
                 <X size={18} />
               </button>
             </div>
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold mb-1 text-muted-foreground">Nama</label>
-                <input
-                  type="text"
-                  value={authName}
-                  onChange={(e) => setAuthName(e.target.value)}
-                  disabled={authBusy}
-                  placeholder="Nama pengguna"
-                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm"
-                />
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Masukkan password admin untuk mengaktifkan tombol upload lagu.
+              </p>
               <div>
                 <label className="block text-xs font-semibold mb-1 text-muted-foreground">Password</label>
-                <input
-                  type="password"
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  disabled={authBusy}
-                  placeholder="Min. 6 karakter"
-                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm"
-                />
+                <div className="relative">
+                  <Lock size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="password"
+                    value={adminInput}
+                    onChange={(e) => setAdminInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !adminBusy) submitAdmin(); }}
+                    disabled={adminBusy}
+                    autoFocus
+                    placeholder="Password admin"
+                    className="w-full pl-8 pr-3 py-2 rounded-md border border-border bg-background text-sm"
+                  />
+                </div>
               </div>
-              {authMsg && (
-                <div className={`text-xs px-3 py-2 rounded-md ${authMsg.type === "ok" ? "bg-green-500/10 text-green-500 border border-green-500/30" : "bg-destructive/10 text-destructive border border-destructive/30"}`}>
-                  {authMsg.text}
+              {adminMsg && (
+                <div className={`text-xs px-3 py-2 rounded-md ${adminMsg.type === "ok" ? "bg-green-500/10 text-green-500 border border-green-500/30" : "bg-destructive/10 text-destructive border border-destructive/30"}`}>
+                  {adminMsg.text}
                 </div>
               )}
               <button
-                onClick={submitAuth}
-                disabled={authBusy}
+                onClick={submitAdmin}
+                disabled={adminBusy}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-60 transition"
               >
-                {authBusy ? <><Loader2 size={16} className="animate-spin" /> Memproses...</> : authMode === "login" ? <><LogIn size={16} /> Login</> : <><UserIcon size={16} /> Daftar</>}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAuthMode(authMode === "login" ? "signup" : "login"); setAuthMsg(null); }}
-                className="w-full text-xs text-muted-foreground hover:text-primary transition"
-              >
-                {authMode === "login" ? "Belum punya akun? Daftar" : "Sudah punya akun? Login"}
+                {adminBusy ? <><Loader2 size={16} className="animate-spin" /> Memproses...</> : <><ShieldCheck size={16} /> Masuk sebagai Admin</>}
               </button>
             </div>
           </div>
