@@ -1478,6 +1478,77 @@ function Index() {
         </div>
       )}
 
+      {actionMenu && (
+        <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={() => setActionMenu(null)} />
+          <div className="relative w-full max-w-xs rounded-2xl border border-primary/30 bg-background shadow-2xl p-2">
+            <div className="px-3 pt-2 pb-3 border-b border-border">
+              <p className="text-xs text-muted-foreground">Aksi admin</p>
+              <p className="text-sm font-bold truncate">{actionMenu.title}</p>
+            </div>
+            <button
+              onClick={() => openRename(actionMenu)}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm hover:bg-primary/10 transition text-left"
+            >
+              <Pencil size={16} className="text-primary" />
+              Ganti nama
+            </button>
+            <button
+              onClick={() => openDelete(actionMenu)}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm hover:bg-destructive/10 transition text-left text-destructive"
+            >
+              <Trash2 size={16} />
+              Hapus
+            </button>
+          </div>
+        </div>
+      )}
+
+      {renameTarget && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={() => !renaming && setRenameTarget(null)} />
+          <div className="relative w-full max-w-sm rounded-2xl border border-primary/40 bg-background shadow-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold flex items-center gap-2 text-primary">
+                <Pencil size={18} /> Ganti Nama Lagu
+              </h2>
+              <button onClick={() => !renaming && setRenameTarget(null)} className="p-1 rounded-full hover:bg-muted transition" aria-label="Tutup">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Nama file di GitHub akan ikut berubah menjadi <span className="font-mono">{(renameInput.trim() || "...")}.mp3</span>
+            </p>
+            <input
+              type="text"
+              value={renameInput}
+              onChange={(e) => setRenameInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !renaming) confirmRename(); }}
+              disabled={renaming}
+              autoFocus
+              placeholder="Nama baru (tanpa .mp3)"
+              className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm mb-4"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => !renaming && setRenameTarget(null)}
+                disabled={renaming}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border hover:bg-muted text-sm font-semibold transition disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmRename}
+                disabled={renaming}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-60 transition"
+              >
+                {renaming ? <><Loader2 size={16} className="animate-spin" /> Mengubah...</> : <><Pencil size={16} /> Simpan</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {deleteTarget && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="absolute inset-0" onClick={() => !deleting && setDeleteTarget(null)} />
