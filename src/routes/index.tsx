@@ -1307,7 +1307,7 @@ function Index() {
                 />
               </div>
               <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <UserIcon size={12} /> Login sebagai <span className="font-semibold text-foreground">{authUser?.name}</span>
+                <ShieldCheck size={12} className="text-primary" /> Mode <span className="font-semibold text-foreground">Admin</span>
               </p>
               {uploadMsg && (
                 <div className={`text-xs px-3 py-2 rounded-md ${uploadMsg.type === "ok" ? "bg-green-500/10 text-green-500 border border-green-500/30" : "bg-destructive/10 text-destructive border border-destructive/30"}`}>
