@@ -21,6 +21,7 @@ import {
   LogOut,
   Lock,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { uploadSong, deleteSong } from "@/lib/songs.functions";
