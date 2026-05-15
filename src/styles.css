@@ -103,6 +103,19 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
+/* Admin mode skin — red gradient accent overrides */
+.admin-mode {
+  --primary: oklch(0.68 0.22 25);
+  --primary-foreground: oklch(0.98 0.01 20);
+  --accent: oklch(0.55 0.24 18);
+  --accent-foreground: oklch(0.98 0.01 20);
+  --ring: oklch(0.68 0.22 25);
+  --destructive: oklch(0.62 0.25 22);
+  --gradient-brand: linear-gradient(135deg, oklch(0.72 0.22 30), oklch(0.5 0.26 12));
+  --shadow-glow: 0 0 40px oklch(0.62 0.25 22 / 0.45);
+  --shadow-glow-cyan: 0 0 30px oklch(0.68 0.22 25 / 0.45);
+}
+
 .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
