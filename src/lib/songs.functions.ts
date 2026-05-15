@@ -86,9 +86,11 @@ async function commitListJson(
 }
 
 export const uploadSong = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data }) => {
+    if (data.adminPassword !== ADMIN_PASSWORD) {
+      throw new Error("Password admin salah");
+    }
     const token = process.env.GITHUB_TOKEN;
     if (!token) throw new Error("GITHUB_TOKEN belum diset");
 
