@@ -803,12 +803,12 @@ function Index() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {authUser ? (
+              {isAdmin && (
                 <>
                   <button
                     onClick={() => { setShowUpload(true); setUploadMsg(null); }}
                     className="p-2 rounded-full border border-primary/40 text-primary bg-primary/5 hover:scale-105 transition"
-                    title={`Upload lagu (login sebagai ${authUser.name})`}
+                    title="Upload lagu (admin)"
                     aria-label="Upload lagu"
                   >
                     <Upload size={16} />
@@ -816,21 +816,12 @@ function Index() {
                   <button
                     onClick={doLogout}
                     className="p-2 rounded-full border border-primary/40 text-primary bg-primary/5 hover:scale-105 transition"
-                    title={`Logout (${authUser.name})`}
-                    aria-label="Logout"
+                    title="Keluar mode admin"
+                    aria-label="Keluar mode admin"
                   >
                     <LogOut size={16} />
                   </button>
                 </>
-              ) : (
-                <button
-                  onClick={() => { setShowAuth(true); setAuthMode("login"); setAuthMsg(null); }}
-                  className="p-2 rounded-full border border-primary/40 text-primary bg-primary/5 hover:scale-105 transition"
-                  title="Login untuk upload"
-                  aria-label="Login"
-                >
-                  <LogIn size={16} />
-                </button>
               )}
               <div className="relative">
                 <button
