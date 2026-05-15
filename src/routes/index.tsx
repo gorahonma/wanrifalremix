@@ -786,7 +786,7 @@ function Index() {
 
   return (
     <div
-      className="min-h-screen w-full bg-background text-foreground flex justify-center items-stretch px-2 sm:px-4 py-3 sm:py-8 relative overflow-hidden"
+      className={`min-h-screen w-full bg-background text-foreground flex justify-center items-stretch px-2 sm:px-4 py-3 sm:py-8 relative overflow-hidden ${isAdmin ? "admin-mode" : ""}`}
       style={themeStyle}
     >
       {showSplash && (
