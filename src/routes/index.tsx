@@ -1253,7 +1253,7 @@ function Index() {
                     onContextMenu={(e) => {
                       if (!isAdmin) return;
                       e.preventDefault();
-                      setDeleteTarget(t);
+                      setActionMenu(t);
                     }}
                     onPointerDown={() => startLongPress(t)}
                     onPointerUp={cancelLongPress}
