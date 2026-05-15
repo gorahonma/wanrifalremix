@@ -24,6 +24,7 @@ import {
   Trash2,
   Pencil,
   Gauge,
+  ArrowDownUp,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { uploadSong, deleteSong, renameSong } from "@/lib/songs.functions";
@@ -40,7 +41,8 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-type Track = { title: string; artist: string; url: string };
+type Track = { title: string; artist: string; url: string; addedAt?: string | null };
+type SortBy = "name" | "newest";
 
 const BASE = "https://cdn.jsdelivr.net/gh/wanrifalgg/song@main/";
 const FALLBACK_TRACKS: Track[] = [
@@ -286,6 +288,8 @@ function Index() {
   const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
   const [speed, setSpeed] = useState<number>(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [sortBy, setSortBy] = useState<SortBy>("name");
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [quote, setQuote] = useState(QUOTES_LUCU[0]);
   const [quoteCat, setQuoteCat] = useState<string>("lucu");
   const [showQuoteMenu, setShowQuoteMenu] = useState(false);
@@ -535,9 +539,24 @@ function Index() {
     return () => clearInterval(id);
   }, [quoteCat]);
 
+  const sortTracksBy = (arr: Track[], by: SortBy): Track[] => {
+    const copy = [...arr];
+    if (by === "newest") {
+      copy.sort((a, b) => {
+        const ad = a.addedAt ? Date.parse(a.addedAt) : 0;
+        const bd = b.addedAt ? Date.parse(b.addedAt) : 0;
+        return bd - ad;
+      });
+    } else {
+      copy.sort((a, b) =>
+        a.title.localeCompare(b.title, "id", { sensitivity: "base" })
+      );
+    }
+    return copy;
+  };
+
   const loadTracksFromServer = async (): Promise<{ ok: boolean; count: number; tracks: Track[] }> => {
-    const sortTracks = (arr: Track[]) =>
-      arr.sort((a, b) => a.title.localeCompare(b.title, "id", { sensitivity: "base" }));
+    const sortTracks = (arr: Track[]) => sortTracksBy(arr, sortBy);
 
     // 1) Server function (pakai GITHUB_TOKEN, limit 5000/jam)
     try {
@@ -604,6 +623,21 @@ function Index() {
       cancelled = true;
     };
   }, []);
+
+  // Re-sort tracks whenever sortBy changes, preserving the currently playing track
+  useEffect(() => {
+    setTracks((prev) => {
+      if (prev.length === 0) return prev;
+      const currentUrl = prev[idx]?.url;
+      const sorted = sortTracksBy(prev, sortBy);
+      if (currentUrl) {
+        const newIdx = sorted.findIndex((t) => t.url === currentUrl);
+        if (newIdx >= 0 && newIdx !== idx) setIdx(newIdx);
+      }
+      return sorted;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy]);
 
   useEffect(() => {
     const a = audioRef.current;
@@ -1248,12 +1282,64 @@ function Index() {
                 <SkipForward size={26} fill="currentColor" />
               </button>
             </div>
-            <button
-              onClick={() => setRepeat(!repeat)}
-              className={`p-2 transition ${repeat ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              <Repeat size={20} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setRepeat(!repeat)}
+                className={`p-2 transition ${repeat ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Repeat size={20} />
+              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowSortMenu((v) => !v)}
+                  className={`p-2 transition ${
+                    sortBy !== "name"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Urutkan playlist"
+                  aria-label="Urutkan playlist"
+                >
+                  <ArrowDownUp size={20} />
+                </button>
+                {showSortMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowSortMenu(false)}
+                    />
+                    <div className="absolute bottom-full right-0 mb-2 z-50 bg-popover border border-border rounded-xl shadow-lg p-1.5 flex flex-col min-w-[140px]">
+                      <button
+                        onClick={() => {
+                          setSortBy("name");
+                          setShowSortMenu(false);
+                        }}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition text-left ${
+                          sortBy === "name"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        Berdasarkan Nama
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortBy("newest");
+                          setShowSortMenu(false);
+                        }}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition text-left ${
+                          sortBy === "newest"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        Terbaru
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Playlist */}
