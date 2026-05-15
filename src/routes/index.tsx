@@ -23,7 +23,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { uploadSong } from "@/lib/songs.functions";
+import { uploadSong, deleteSong } from "@/lib/songs.functions";
 import { listSongs } from "@/lib/songs-list.functions";
 import { toast } from "sonner";
 
