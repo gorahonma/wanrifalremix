@@ -306,61 +306,50 @@ function Index() {
   const uploadSongFn = useServerFn(uploadSong);
   const listSongsFn = useServerFn(listSongs);
 
-  // Auth state
-  const [authUser, setAuthUser] = useState<{ id: string; name: string } | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [authName, setAuthName] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authBusy, setAuthBusy] = useState(false);
-  const [authMsg, setAuthMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  // Admin state — login dengan klik logo aplikasi
+  const ADMIN_STORAGE_KEY = "wanrifal_admin_pw";
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [adminInput, setAdminInput] = useState("");
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [adminMsg, setAdminMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      const u = session?.user;
-      setAuthUser(u ? { id: u.id, name: (u.user_metadata?.name as string) || u.email?.split("@")[0] || "User" } : null);
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const u = session?.user;
-      setAuthUser(u ? { id: u.id, name: (u.user_metadata?.name as string) || u.email?.split("@")[0] || "User" } : null);
-    });
-    return () => subscription.unsubscribe();
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem(ADMIN_STORAGE_KEY);
+    if (saved) {
+      setAdminPassword(saved);
+      setIsAdmin(true);
+    }
   }, []);
 
-  const nameToEmail = (n: string) => `${n.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_")}@wanrifal.local`;
-
-  const submitAuth = async () => {
-    const name = authName.trim();
-    if (!/^[a-zA-Z0-9_ ]{3,32}$/.test(name)) {
-      setAuthMsg({ type: "err", text: "Nama 3-32 karakter (huruf/angka/_/spasi)" }); return;
+  const submitAdmin = () => {
+    if (!adminInput) {
+      setAdminMsg({ type: "err", text: "Masukkan password admin" });
+      return;
     }
-    if (authPassword.length < 6) {
-      setAuthMsg({ type: "err", text: "Password minimal 6 karakter" }); return;
-    }
-    setAuthBusy(true); setAuthMsg(null);
-    try {
-      const email = nameToEmail(name);
-      if (authMode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email, password: authPassword,
-          options: { data: { name }, emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: authPassword });
-        if (error) throw error;
-      }
-      setShowAuth(false);
-      setAuthName(""); setAuthPassword("");
-    } catch (e: unknown) {
-      const m = e instanceof Error ? e.message : "Gagal";
-      setAuthMsg({ type: "err", text: m.includes("Invalid login") ? "Nama atau password salah" : m });
-    } finally {
-      setAuthBusy(false);
-    }
+    setAdminBusy(true);
+    setAdminMsg(null);
+    // Validasi sebenarnya terjadi di server saat upload.
+    // Di sini cukup simpan password agar tombol upload muncul.
+    setTimeout(() => {
+      setAdminPassword(adminInput);
+      setIsAdmin(true);
+      try { localStorage.setItem(ADMIN_STORAGE_KEY, adminInput); } catch { /* ignore */ }
+      setAdminInput("");
+      setShowAdmin(false);
+      setAdminBusy(false);
+      toast.success("Mode admin aktif");
+    }, 200);
   };
 
-  const doLogout = async () => { await supabase.auth.signOut(); };
+  const doLogout = () => {
+    setIsAdmin(false);
+    setAdminPassword("");
+    try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch { /* ignore */ }
+    toast.success("Keluar dari mode admin");
+  };
 
   const BACKGROUNDS = [
     { name: "Default", value: "" },
