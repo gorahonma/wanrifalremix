@@ -764,7 +764,15 @@ function Index() {
           {/* Header */}
           <header className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <img src="/images/mylogo.png" alt="WanrifalRemix" className="w-11 h-11 object-contain" />
+              <button
+                type="button"
+                onClick={() => { if (!isAdmin) { setShowAdmin(true); setAdminInput(""); setAdminMsg(null); } }}
+                className="p-0 m-0 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40"
+                title={isAdmin ? "Mode admin aktif" : "Klik untuk masuk sebagai admin"}
+                aria-label="Logo WanrifalRemix"
+              >
+                <img src="/images/mylogo.png" alt="WanrifalRemix" className="w-11 h-11 object-contain hover:scale-105 transition" />
+              </button>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-[15px]">WanrifalRemix</span>
