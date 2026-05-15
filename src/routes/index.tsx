@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Trash2,
   Pencil,
+  Gauge,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { uploadSong, deleteSong, renameSong } from "@/lib/songs.functions";
