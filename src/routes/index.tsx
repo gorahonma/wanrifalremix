@@ -624,6 +624,21 @@ function Index() {
     };
   }, []);
 
+  // Re-sort tracks whenever sortBy changes, preserving the currently playing track
+  useEffect(() => {
+    setTracks((prev) => {
+      if (prev.length === 0) return prev;
+      const currentUrl = prev[idx]?.url;
+      const sorted = sortTracksBy(prev, sortBy);
+      if (currentUrl) {
+        const newIdx = sorted.findIndex((t) => t.url === currentUrl);
+        if (newIdx >= 0 && newIdx !== idx) setIdx(newIdx);
+      }
+      return sorted;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy]);
+
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
