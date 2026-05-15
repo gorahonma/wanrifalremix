@@ -1361,7 +1361,7 @@ function Index() {
 
       <audio
         ref={audioRef}
-        src={current.url}
+        {...(current.url ? { src: current.url } : {})}
         onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onEnded={onEnded}
