@@ -285,6 +285,7 @@ function Index() {
   const [repeat, setRepeat] = useState(false);
   const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
   const [speed, setSpeed] = useState<number>(1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [quote, setQuote] = useState(QUOTES_LUCU[0]);
   const [quoteCat, setQuoteCat] = useState<string>("lucu");
   const [showQuoteMenu, setShowQuoteMenu] = useState(false);
