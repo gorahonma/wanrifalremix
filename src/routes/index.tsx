@@ -40,7 +40,8 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-type Track = { title: string; artist: string; url: string };
+type Track = { title: string; artist: string; url: string; addedAt?: string | null };
+type SortBy = "name" | "newest";
 
 const BASE = "https://cdn.jsdelivr.net/gh/wanrifalgg/song@main/";
 const FALLBACK_TRACKS: Track[] = [
