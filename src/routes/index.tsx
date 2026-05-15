@@ -304,7 +304,58 @@ function Index() {
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const uploadSongFn = useServerFn(uploadSong);
+  const deleteSongFn = useServerFn(deleteSong);
   const listSongsFn = useServerFn(listSongs);
+
+  // Delete state
+  const [deleteTarget, setDeleteTarget] = useState<Track | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFiredRef = useRef(false);
+
+  const startLongPress = (t: Track) => {
+    if (!isAdmin) return;
+    longPressFiredRef.current = false;
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = setTimeout(() => {
+      longPressFiredRef.current = true;
+      setDeleteTarget(t);
+    }, 550);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const filenameFromUrl = (url: string): string | null => {
+    const prefix = "https://cdn.jsdelivr.net/gh/wanrifalgg/song@main/";
+    if (!url.startsWith(prefix)) return null;
+    try { return decodeURIComponent(url.slice(prefix.length)); } catch { return null; }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || !isAdmin || !adminPassword) return;
+    const filename = filenameFromUrl(deleteTarget.url);
+    if (!filename) { toast.error("Lagu ini tidak bisa dihapus (URL tidak dikenali)"); return; }
+    setDeleting(true);
+    try {
+      await deleteSongFn({ data: { filename, adminPassword } });
+      toast.success(`"${deleteTarget.title}" dihapus`);
+      setTracks((prev) => {
+        const next = prev.filter((x) => x.url !== deleteTarget.url);
+        if (idx >= next.length) setIdx(Math.max(0, next.length - 1));
+        return next;
+      });
+      setDeleteTarget(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gagal menghapus lagu");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   // Admin state — login dengan klik logo aplikasi
   const ADMIN_STORAGE_KEY = "wanrifal_admin_pw";
