@@ -21,9 +21,10 @@ import {
   LogOut,
   Lock,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { uploadSong } from "@/lib/songs.functions";
+import { uploadSong, deleteSong } from "@/lib/songs.functions";
 import { listSongs } from "@/lib/songs-list.functions";
 import { toast } from "sonner";
 
@@ -304,7 +305,58 @@ function Index() {
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const uploadSongFn = useServerFn(uploadSong);
+  const deleteSongFn = useServerFn(deleteSong);
   const listSongsFn = useServerFn(listSongs);
+
+  // Delete state
+  const [deleteTarget, setDeleteTarget] = useState<Track | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFiredRef = useRef(false);
+
+  const startLongPress = (t: Track) => {
+    if (!isAdmin) return;
+    longPressFiredRef.current = false;
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = setTimeout(() => {
+      longPressFiredRef.current = true;
+      setDeleteTarget(t);
+    }, 550);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const filenameFromUrl = (url: string): string | null => {
+    const prefix = "https://cdn.jsdelivr.net/gh/wanrifalgg/song@main/";
+    if (!url.startsWith(prefix)) return null;
+    try { return decodeURIComponent(url.slice(prefix.length)); } catch { return null; }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || !isAdmin || !adminPassword) return;
+    const filename = filenameFromUrl(deleteTarget.url);
+    if (!filename) { toast.error("Lagu ini tidak bisa dihapus (URL tidak dikenali)"); return; }
+    setDeleting(true);
+    try {
+      await deleteSongFn({ data: { filename, adminPassword } });
+      toast.success(`"${deleteTarget.title}" dihapus`);
+      setTracks((prev) => {
+        const next = prev.filter((x) => x.url !== deleteTarget.url);
+        if (idx >= next.length) setIdx(Math.max(0, next.length - 1));
+        return next;
+      });
+      setDeleteTarget(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gagal menghapus lagu");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   // Admin state — login dengan klik logo aplikasi
   const ADMIN_STORAGE_KEY = "wanrifal_admin_pw";
@@ -1154,10 +1206,20 @@ function Index() {
                   <li
                     key={t.url}
                     onClick={() => {
+                      if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
                       setIdx(i);
                       setPlaying(true);
                     }}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition ${
+                    onContextMenu={(e) => {
+                      if (!isAdmin) return;
+                      e.preventDefault();
+                      setDeleteTarget(t);
+                    }}
+                    onPointerDown={() => startLongPress(t)}
+                    onPointerUp={cancelLongPress}
+                    onPointerLeave={cancelLongPress}
+                    onPointerCancel={cancelLongPress}
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition select-none ${
                       active
                         ? "border border-primary/50 bg-primary/5"
                         : "border border-transparent hover:bg-[var(--surface-2)]/50"
@@ -1370,6 +1432,41 @@ function Index() {
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-60 transition"
               >
                 {adminBusy ? <><Loader2 size={16} className="animate-spin" /> Memproses...</> : <><ShieldCheck size={16} /> Masuk sebagai Admin</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={() => !deleting && setDeleteTarget(null)} />
+          <div className="relative w-full max-w-sm rounded-2xl border border-destructive/40 bg-background shadow-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold flex items-center gap-2 text-destructive">
+                <Trash2 size={18} /> Hapus Lagu
+              </h2>
+              <button onClick={() => !deleting && setDeleteTarget(null)} className="p-1 rounded-full hover:bg-muted transition" aria-label="Tutup">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Yakin ingin menghapus <span className="font-semibold text-foreground">"{deleteTarget.title}"</span>? File akan dihapus permanen dari repository GitHub.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => !deleting && setDeleteTarget(null)}
+                disabled={deleting}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border hover:bg-muted text-sm font-semibold transition disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-destructive text-destructive-foreground font-semibold hover:opacity-90 disabled:opacity-60 transition"
+              >
+                {deleting ? <><Loader2 size={16} className="animate-spin" /> Menghapus...</> : <><Trash2 size={16} /> Hapus</>}
               </button>
             </div>
           </div>
