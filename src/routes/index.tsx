@@ -1437,6 +1437,41 @@ function Index() {
           </div>
         </div>
       )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={() => !deleting && setDeleteTarget(null)} />
+          <div className="relative w-full max-w-sm rounded-2xl border border-destructive/40 bg-background shadow-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold flex items-center gap-2 text-destructive">
+                <Trash2 size={18} /> Hapus Lagu
+              </h2>
+              <button onClick={() => !deleting && setDeleteTarget(null)} className="p-1 rounded-full hover:bg-muted transition" aria-label="Tutup">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Yakin ingin menghapus <span className="font-semibold text-foreground">"{deleteTarget.title}"</span>? File akan dihapus permanen dari repository GitHub.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => !deleting && setDeleteTarget(null)}
+                disabled={deleting}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border hover:bg-muted text-sm font-semibold transition disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-destructive text-destructive-foreground font-semibold hover:opacity-90 disabled:opacity-60 transition"
+              >
+                {deleting ? <><Loader2 size={16} className="animate-spin" /> Menghapus...</> : <><Trash2 size={16} /> Hapus</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
