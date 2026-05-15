@@ -84,8 +84,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Wanrifal Remix" },
       { name: "twitter:description", content: "Wanrifal Remix App is a web application built from a GitHub repository." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e33510d5-ef8b-43d1-89c4-85c56bc84ad1/id-preview-c19823a3--104d374c-921a-46c9-8457-66fff4681523.lovable.app-1778467355790.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e33510d5-ef8b-43d1-89c4-85c56bc84ad1/id-preview-c19823a3--104d374c-921a-46c9-8457-66fff4681523.lovable.app-1778467355790.png" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c5c2c51c-97c2-444d-8767-e3953eef9a17" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c5c2c51c-97c2-444d-8767-e3953eef9a17" },
     ],
     links: [
       {
