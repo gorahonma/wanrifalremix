@@ -1282,12 +1282,64 @@ function Index() {
                 <SkipForward size={26} fill="currentColor" />
               </button>
             </div>
-            <button
-              onClick={() => setRepeat(!repeat)}
-              className={`p-2 transition ${repeat ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              <Repeat size={20} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setRepeat(!repeat)}
+                className={`p-2 transition ${repeat ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Repeat size={20} />
+              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowSortMenu((v) => !v)}
+                  className={`p-2 transition ${
+                    sortBy !== "name"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Urutkan playlist"
+                  aria-label="Urutkan playlist"
+                >
+                  <ArrowDownUp size={20} />
+                </button>
+                {showSortMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowSortMenu(false)}
+                    />
+                    <div className="absolute bottom-full right-0 mb-2 z-50 bg-popover border border-border rounded-xl shadow-lg p-1.5 flex flex-col min-w-[140px]">
+                      <button
+                        onClick={() => {
+                          setSortBy("name");
+                          setShowSortMenu(false);
+                        }}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition text-left ${
+                          sortBy === "name"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        Berdasarkan Nama
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortBy("newest");
+                          setShowSortMenu(false);
+                        }}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition text-left ${
+                          sortBy === "newest"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        Terbaru
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Playlist */}
