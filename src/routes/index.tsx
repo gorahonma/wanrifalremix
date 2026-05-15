@@ -282,6 +282,8 @@ function Index() {
   const [duration, setDuration] = useState(0);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
+  const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
+  const [speed, setSpeed] = useState<number>(1);
   const [quote, setQuote] = useState(QUOTES_LUCU[0]);
   const [quoteCat, setQuoteCat] = useState<string>("lucu");
   const [showQuoteMenu, setShowQuoteMenu] = useState(false);
@@ -607,6 +609,23 @@ function Index() {
     if (playing) a.play().catch(() => setPlaying(false));
     else a.pause();
   }, [playing, idx]);
+
+  // Apply playback speed (pitch & tempo synced — pitch follows speed)
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.playbackRate = speed;
+    // Disable pitch preservation so pitch shifts with tempo
+    type PitchAudio = HTMLAudioElement & {
+      preservesPitch?: boolean;
+      mozPreservesPitch?: boolean;
+      webkitPreservesPitch?: boolean;
+    };
+    const pa = a as PitchAudio;
+    pa.preservesPitch = false;
+    pa.mozPreservesPitch = false;
+    pa.webkitPreservesPitch = false;
+  }, [speed, idx]);
 
   // Sleep timer: tick + auto-pause
   useEffect(() => {
@@ -1190,6 +1209,27 @@ function Index() {
             >
               <Repeat size={20} />
             </button>
+          </div>
+
+          {/* Playback speed (pitch + tempo synced) */}
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span className="text-xs text-muted-foreground">Kecepatan</span>
+            <div className="flex items-center gap-1 flex-wrap justify-center">
+              {SPEED_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSpeed(s)}
+                  className={`px-2 py-1 rounded-md text-xs font-medium transition border ${
+                    speed === s
+                      ? "bg-primary text-primary-foreground border-transparent"
+                      : "bg-muted/40 text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                  title={`Putar pada ${s}x (pitch & tempo)`}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Playlist */}
