@@ -18,14 +18,13 @@ import {
   RefreshCw,
   Loader2,
   X,
-  LogIn,
   LogOut,
-  User as UserIcon,
+  Lock,
+  ShieldCheck,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { uploadSong } from "@/lib/songs.functions";
 import { listSongs } from "@/lib/songs-list.functions";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
