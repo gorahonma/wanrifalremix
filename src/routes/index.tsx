@@ -18,14 +18,13 @@ import {
   RefreshCw,
   Loader2,
   X,
-  LogIn,
   LogOut,
-  User as UserIcon,
+  Lock,
+  ShieldCheck,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { uploadSong } from "@/lib/songs.functions";
 import { listSongs } from "@/lib/songs-list.functions";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
@@ -307,61 +306,50 @@ function Index() {
   const uploadSongFn = useServerFn(uploadSong);
   const listSongsFn = useServerFn(listSongs);
 
-  // Auth state
-  const [authUser, setAuthUser] = useState<{ id: string; name: string } | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [authName, setAuthName] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authBusy, setAuthBusy] = useState(false);
-  const [authMsg, setAuthMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  // Admin state — login dengan klik logo aplikasi
+  const ADMIN_STORAGE_KEY = "wanrifal_admin_pw";
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [adminInput, setAdminInput] = useState("");
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [adminMsg, setAdminMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      const u = session?.user;
-      setAuthUser(u ? { id: u.id, name: (u.user_metadata?.name as string) || u.email?.split("@")[0] || "User" } : null);
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const u = session?.user;
-      setAuthUser(u ? { id: u.id, name: (u.user_metadata?.name as string) || u.email?.split("@")[0] || "User" } : null);
-    });
-    return () => subscription.unsubscribe();
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem(ADMIN_STORAGE_KEY);
+    if (saved) {
+      setAdminPassword(saved);
+      setIsAdmin(true);
+    }
   }, []);
 
-  const nameToEmail = (n: string) => `${n.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_")}@wanrifal.local`;
-
-  const submitAuth = async () => {
-    const name = authName.trim();
-    if (!/^[a-zA-Z0-9_ ]{3,32}$/.test(name)) {
-      setAuthMsg({ type: "err", text: "Nama 3-32 karakter (huruf/angka/_/spasi)" }); return;
+  const submitAdmin = () => {
+    if (!adminInput) {
+      setAdminMsg({ type: "err", text: "Masukkan password admin" });
+      return;
     }
-    if (authPassword.length < 6) {
-      setAuthMsg({ type: "err", text: "Password minimal 6 karakter" }); return;
-    }
-    setAuthBusy(true); setAuthMsg(null);
-    try {
-      const email = nameToEmail(name);
-      if (authMode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email, password: authPassword,
-          options: { data: { name }, emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: authPassword });
-        if (error) throw error;
-      }
-      setShowAuth(false);
-      setAuthName(""); setAuthPassword("");
-    } catch (e: unknown) {
-      const m = e instanceof Error ? e.message : "Gagal";
-      setAuthMsg({ type: "err", text: m.includes("Invalid login") ? "Nama atau password salah" : m });
-    } finally {
-      setAuthBusy(false);
-    }
+    setAdminBusy(true);
+    setAdminMsg(null);
+    // Validasi sebenarnya terjadi di server saat upload.
+    // Di sini cukup simpan password agar tombol upload muncul.
+    setTimeout(() => {
+      setAdminPassword(adminInput);
+      setIsAdmin(true);
+      try { localStorage.setItem(ADMIN_STORAGE_KEY, adminInput); } catch { /* ignore */ }
+      setAdminInput("");
+      setShowAdmin(false);
+      setAdminBusy(false);
+      toast.success("Mode admin aktif");
+    }, 200);
   };
 
-  const doLogout = async () => { await supabase.auth.signOut(); };
+  const doLogout = () => {
+    setIsAdmin(false);
+    setAdminPassword("");
+    try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch { /* ignore */ }
+    toast.success("Keluar dari mode admin");
+  };
 
   const BACKGROUNDS = [
     { name: "Default", value: "" },
@@ -563,7 +551,7 @@ function Index() {
   };
 
   const submitUpload = async () => {
-    if (!authUser) { setUploadMsg({ type: "err", text: "Login dulu untuk upload" }); return; }
+    if (!isAdmin || !adminPassword) { setUploadMsg({ type: "err", text: "Mode admin tidak aktif" }); return; }
     if (!uploadFile) { setUploadMsg({ type: "err", text: "Pilih file .mp3 dulu" }); return; }
     if (!uploadFile.name.toLowerCase().endsWith(".mp3")) {
       setUploadMsg({ type: "err", text: "Hanya file .mp3 yang didukung" }); return;
@@ -590,6 +578,7 @@ function Index() {
           filename: uploadFile.name,
           title: uploadTitle.trim(),
           contentBase64,
+          adminPassword,
         },
       });
       setUploadMsg({ type: "ok", text: `Berhasil! "${res.title}" ditambahkan.` });
@@ -775,7 +764,15 @@ function Index() {
           {/* Header */}
           <header className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <img src="/images/mylogo.png" alt="WanrifalRemix" className="w-11 h-11 object-contain" />
+              <button
+                type="button"
+                onClick={() => { if (!isAdmin) { setShowAdmin(true); setAdminInput(""); setAdminMsg(null); } }}
+                className="p-0 m-0 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40"
+                title={isAdmin ? "Mode admin aktif" : "Klik untuk masuk sebagai admin"}
+                aria-label="Logo WanrifalRemix"
+              >
+                <img src="/images/mylogo.png" alt="WanrifalRemix" className="w-11 h-11 object-contain hover:scale-105 transition" />
+              </button>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-[15px]">WanrifalRemix</span>
@@ -806,12 +803,12 @@ function Index() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {authUser ? (
+              {isAdmin && (
                 <>
                   <button
                     onClick={() => { setShowUpload(true); setUploadMsg(null); }}
                     className="p-2 rounded-full border border-primary/40 text-primary bg-primary/5 hover:scale-105 transition"
-                    title={`Upload lagu (login sebagai ${authUser.name})`}
+                    title="Upload lagu (admin)"
                     aria-label="Upload lagu"
                   >
                     <Upload size={16} />
@@ -819,21 +816,12 @@ function Index() {
                   <button
                     onClick={doLogout}
                     className="p-2 rounded-full border border-primary/40 text-primary bg-primary/5 hover:scale-105 transition"
-                    title={`Logout (${authUser.name})`}
-                    aria-label="Logout"
+                    title="Keluar mode admin"
+                    aria-label="Keluar mode admin"
                   >
                     <LogOut size={16} />
                   </button>
                 </>
-              ) : (
-                <button
-                  onClick={() => { setShowAuth(true); setAuthMode("login"); setAuthMsg(null); }}
-                  className="p-2 rounded-full border border-primary/40 text-primary bg-primary/5 hover:scale-105 transition"
-                  title="Login untuk upload"
-                  aria-label="Login"
-                >
-                  <LogIn size={16} />
-                </button>
               )}
               <div className="relative">
                 <button
@@ -1319,7 +1307,7 @@ function Index() {
                 />
               </div>
               <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <UserIcon size={12} /> Login sebagai <span className="font-semibold text-foreground">{authUser?.name}</span>
+                <ShieldCheck size={12} className="text-primary" /> Mode <span className="font-semibold text-foreground">Admin</span>
               </p>
               {uploadMsg && (
                 <div className={`text-xs px-3 py-2 rounded-md ${uploadMsg.type === "ok" ? "bg-green-500/10 text-green-500 border border-green-500/30" : "bg-destructive/10 text-destructive border border-destructive/30"}`}>
@@ -1338,60 +1326,50 @@ function Index() {
         </div>
       )}
 
-      {showAuth && (
+      {showAdmin && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="absolute inset-0" onClick={() => !authBusy && setShowAuth(false)} />
+          <div className="absolute inset-0" onClick={() => !adminBusy && setShowAdmin(false)} />
           <div className="relative w-full max-w-sm rounded-2xl border border-primary/30 bg-background shadow-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold flex items-center gap-2">
-                <UserIcon size={18} className="text-primary" />
-                {authMode === "login" ? "Login" : "Daftar Akun"}
+                <ShieldCheck size={18} className="text-primary" />
+                Login Admin
               </h2>
-              <button onClick={() => !authBusy && setShowAuth(false)} className="p-1 rounded-full hover:bg-muted transition" aria-label="Tutup">
+              <button onClick={() => !adminBusy && setShowAdmin(false)} className="p-1 rounded-full hover:bg-muted transition" aria-label="Tutup">
                 <X size={18} />
               </button>
             </div>
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold mb-1 text-muted-foreground">Nama</label>
-                <input
-                  type="text"
-                  value={authName}
-                  onChange={(e) => setAuthName(e.target.value)}
-                  disabled={authBusy}
-                  placeholder="Nama pengguna"
-                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm"
-                />
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Masukkan password admin untuk mengaktifkan tombol upload lagu.
+              </p>
               <div>
                 <label className="block text-xs font-semibold mb-1 text-muted-foreground">Password</label>
-                <input
-                  type="password"
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  disabled={authBusy}
-                  placeholder="Min. 6 karakter"
-                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm"
-                />
+                <div className="relative">
+                  <Lock size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="password"
+                    value={adminInput}
+                    onChange={(e) => setAdminInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !adminBusy) submitAdmin(); }}
+                    disabled={adminBusy}
+                    autoFocus
+                    placeholder="Password admin"
+                    className="w-full pl-8 pr-3 py-2 rounded-md border border-border bg-background text-sm"
+                  />
+                </div>
               </div>
-              {authMsg && (
-                <div className={`text-xs px-3 py-2 rounded-md ${authMsg.type === "ok" ? "bg-green-500/10 text-green-500 border border-green-500/30" : "bg-destructive/10 text-destructive border border-destructive/30"}`}>
-                  {authMsg.text}
+              {adminMsg && (
+                <div className={`text-xs px-3 py-2 rounded-md ${adminMsg.type === "ok" ? "bg-green-500/10 text-green-500 border border-green-500/30" : "bg-destructive/10 text-destructive border border-destructive/30"}`}>
+                  {adminMsg.text}
                 </div>
               )}
               <button
-                onClick={submitAuth}
-                disabled={authBusy}
+                onClick={submitAdmin}
+                disabled={adminBusy}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-60 transition"
               >
-                {authBusy ? <><Loader2 size={16} className="animate-spin" /> Memproses...</> : authMode === "login" ? <><LogIn size={16} /> Login</> : <><UserIcon size={16} /> Daftar</>}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAuthMode(authMode === "login" ? "signup" : "login"); setAuthMsg(null); }}
-                className="w-full text-xs text-muted-foreground hover:text-primary transition"
-              >
-                {authMode === "login" ? "Belum punya akun? Daftar" : "Sudah punya akun? Login"}
+                {adminBusy ? <><Loader2 size={16} className="animate-spin" /> Memproses...</> : <><ShieldCheck size={16} /> Masuk sebagai Admin</>}
               </button>
             </div>
           </div>

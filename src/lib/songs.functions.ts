@@ -1,11 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const REPO_OWNER = "wanrifalgg";
 const REPO_NAME = "song";
 const BRANCH = "main";
 const CDN_BASE = `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@${BRANCH}/`;
+const ADMIN_PASSWORD = "wanrifal101993";
 
 const inputSchema = z.object({
   filename: z
@@ -15,6 +15,7 @@ const inputSchema = z.object({
     .regex(/^[a-zA-Z0-9 ._-]+\.mp3$/i, "Nama file hanya boleh huruf/angka/spasi/._- dan berakhiran .mp3"),
   title: z.string().min(1).max(200),
   contentBase64: z.string().min(10).max(35_000_000), // ~25MB binary -> ~33MB base64
+  adminPassword: z.string().min(1).max(200),
 });
 
 type GhContent = { sha?: string; content?: string };
@@ -85,9 +86,11 @@ async function commitListJson(
 }
 
 export const uploadSong = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data }) => {
+    if (data.adminPassword !== ADMIN_PASSWORD) {
+      throw new Error("Password admin salah");
+    }
     const token = process.env.GITHUB_TOKEN;
     if (!token) throw new Error("GITHUB_TOKEN belum diset");
 
