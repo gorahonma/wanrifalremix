@@ -551,7 +551,7 @@ function Index() {
   };
 
   const submitUpload = async () => {
-    if (!authUser) { setUploadMsg({ type: "err", text: "Login dulu untuk upload" }); return; }
+    if (!isAdmin || !adminPassword) { setUploadMsg({ type: "err", text: "Mode admin tidak aktif" }); return; }
     if (!uploadFile) { setUploadMsg({ type: "err", text: "Pilih file .mp3 dulu" }); return; }
     if (!uploadFile.name.toLowerCase().endsWith(".mp3")) {
       setUploadMsg({ type: "err", text: "Hanya file .mp3 yang didukung" }); return;
@@ -578,6 +578,7 @@ function Index() {
           filename: uploadFile.name,
           title: uploadTitle.trim(),
           contentBase64,
+          adminPassword,
         },
       });
       setUploadMsg({ type: "ok", text: `Berhasil! "${res.title}" ditambahkan.` });
