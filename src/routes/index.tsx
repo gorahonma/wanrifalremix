@@ -1214,25 +1214,50 @@ function Index() {
           </div>
 
           {/* Playback speed (pitch + tempo synced) */}
-          <div className="mt-3 flex items-center justify-center gap-2">
-            <span className="text-xs text-muted-foreground">Kecepatan</span>
-            <div className="flex items-center gap-1 flex-wrap justify-center">
-              {SPEED_OPTIONS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSpeed(s)}
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition border ${
-                    speed === s
-                      ? "bg-primary text-primary-foreground border-transparent"
-                      : "bg-muted/40 text-muted-foreground border-border hover:text-foreground"
-                  }`}
-                  title={`Putar pada ${s}x (pitch & tempo)`}
-                >
-                  {s}x
-                </button>
-              ))}
+          <div className="mt-3 flex items-center justify-center">
+            <div className="relative">
+              <button
+                onClick={() => setShowSpeedMenu((v) => !v)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition border ${
+                  speed !== 1
+                    ? "bg-primary text-primary-foreground border-transparent"
+                    : "bg-muted/40 text-muted-foreground border-border hover:text-foreground"
+                }`}
+                title="Kecepatan pemutaran"
+                aria-label="Kecepatan pemutaran"
+              >
+                <Gauge size={14} />
+                <span>{speed}x</span>
+              </button>
+              {showSpeedMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowSpeedMenu(false)}
+                  />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 bg-popover border border-border rounded-xl shadow-lg p-1.5 flex flex-col min-w-[88px]">
+                    {SPEED_OPTIONS.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => {
+                          setSpeed(s);
+                          setShowSpeedMenu(false);
+                        }}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition text-center ${
+                          speed === s
+                            ? "bg-primary text-primary-foreground"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {s}x
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
+
 
           {/* Playlist */}
           <div className="mt-7">
